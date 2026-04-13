@@ -15,5 +15,10 @@
 pub const PAYMENT_VERSION: &str = "1.0";
 
 mod error;
+mod headers;
 
 pub use error::PaymentMiddlewareError;
+pub use headers::{
+    BsvPaymentHeader, X_BSV_PAYMENT, X_BSV_PAYMENT_DERIVATION_PREFIX,
+    X_BSV_PAYMENT_SATOSHIS_PAID, X_BSV_PAYMENT_SATOSHIS_REQUIRED, X_BSV_PAYMENT_VERSION,
+};
