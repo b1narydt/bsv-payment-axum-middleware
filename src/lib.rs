@@ -18,6 +18,7 @@ mod config;
 mod error;
 mod extractor;
 mod headers;
+mod payment;
 
 pub use config::{
     ConfigError, PaymentMiddlewareConfig, PaymentMiddlewareConfigBuilder, PriceFn, PriceFuture,
