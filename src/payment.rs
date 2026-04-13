@@ -34,7 +34,7 @@ pub(crate) enum Outcome {
 /// See `docs/superpowers/specs/2026-04-12-bsv-payment-axum-middleware-design.md`
 /// Section "Request flow" for the full branch table.
 #[allow(dead_code)] // called by Task 7 middleware glue
-pub(crate) async fn process_payment<W: WalletInterface + Send + Sync + 'static>(
+pub(crate) async fn process_payment<W: WalletInterface + Clone + Send + Sync + 'static>(
     parts: &Parts,
     identity_key: &str,
     config: &PaymentMiddlewareConfig<W>,
