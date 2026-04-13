@@ -27,7 +27,7 @@ pub use config::{
 pub use error::PaymentMiddlewareError;
 pub use extractor::Paid;
 pub use headers::{
-    BsvPaymentHeader, X_BSV_PAYMENT, X_BSV_PAYMENT_DERIVATION_PREFIX,
-    X_BSV_PAYMENT_SATOSHIS_PAID, X_BSV_PAYMENT_SATOSHIS_REQUIRED, X_BSV_PAYMENT_VERSION,
+    BsvPaymentHeader, X_BSV_PAYMENT, X_BSV_PAYMENT_DERIVATION_PREFIX, X_BSV_PAYMENT_SATOSHIS_PAID,
+    X_BSV_PAYMENT_SATOSHIS_REQUIRED, X_BSV_PAYMENT_VERSION,
 };
 pub use middleware::{PaymentLayer, PaymentService};

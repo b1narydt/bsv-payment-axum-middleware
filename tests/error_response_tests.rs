@@ -17,7 +17,8 @@ async fn parse_body(resp: axum::response::Response) -> (StatusCode, http::Header
 
 #[tokio::test]
 async fn server_misconfigured_is_500_with_ts_body() {
-    let (status, _, json) = parse_body(PaymentMiddlewareError::ServerMisconfigured.into_response()).await;
+    let (status, _, json) =
+        parse_body(PaymentMiddlewareError::ServerMisconfigured.into_response()).await;
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
     assert_eq!(json["status"], "error");
     assert_eq!(json["code"], "ERR_SERVER_MISCONFIGURED");
@@ -29,7 +30,8 @@ async fn server_misconfigured_is_500_with_ts_body() {
 
 #[tokio::test]
 async fn price_calculation_failed_is_500_with_ts_body() {
-    let (status, _, json) = parse_body(PaymentMiddlewareError::PriceCalculationFailed.into_response()).await;
+    let (status, _, json) =
+        parse_body(PaymentMiddlewareError::PriceCalculationFailed.into_response()).await;
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
     assert_eq!(json["code"], "ERR_PAYMENT_INTERNAL");
     assert_eq!(
@@ -47,8 +49,14 @@ async fn payment_required_is_402_with_headers_and_body() {
     let (status, headers, json) = parse_body(err.into_response()).await;
     assert_eq!(status, StatusCode::PAYMENT_REQUIRED);
     assert_eq!(headers.get("x-bsv-payment-version").unwrap(), "1.0");
-    assert_eq!(headers.get("x-bsv-payment-satoshis-required").unwrap(), "100");
-    assert_eq!(headers.get("x-bsv-payment-derivation-prefix").unwrap(), "somebase64=");
+    assert_eq!(
+        headers.get("x-bsv-payment-satoshis-required").unwrap(),
+        "100"
+    );
+    assert_eq!(
+        headers.get("x-bsv-payment-derivation-prefix").unwrap(),
+        "somebase64="
+    );
     assert_eq!(json["code"], "ERR_PAYMENT_REQUIRED");
     assert_eq!(json["satoshisRequired"], 100);
     assert_eq!(
@@ -59,7 +67,8 @@ async fn payment_required_is_402_with_headers_and_body() {
 
 #[tokio::test]
 async fn malformed_payment_is_400_with_ts_body() {
-    let (status, _, json) = parse_body(PaymentMiddlewareError::MalformedPayment.into_response()).await;
+    let (status, _, json) =
+        parse_body(PaymentMiddlewareError::MalformedPayment.into_response()).await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(json["code"], "ERR_MALFORMED_PAYMENT");
     assert_eq!(
@@ -70,7 +79,8 @@ async fn malformed_payment_is_400_with_ts_body() {
 
 #[tokio::test]
 async fn invalid_derivation_prefix_is_400_with_ts_body() {
-    let (status, _, json) = parse_body(PaymentMiddlewareError::InvalidDerivationPrefix.into_response()).await;
+    let (status, _, json) =
+        parse_body(PaymentMiddlewareError::InvalidDerivationPrefix.into_response()).await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(json["code"], "ERR_INVALID_DERIVATION_PREFIX");
     assert_eq!(

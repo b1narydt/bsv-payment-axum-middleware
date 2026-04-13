@@ -42,7 +42,11 @@ mod tests {
 
     #[tokio::test]
     async fn extractor_returns_paid_when_extension_present() {
-        let paid = Paid { satoshis_paid: 42, accepted: true, tx_base64: Some("tx".into()) };
+        let paid = Paid {
+            satoshis_paid: 42,
+            accepted: true,
+            tx_base64: Some("tx".into()),
+        };
         let mut req = Request::builder().uri("/").body(()).unwrap();
         req.extensions_mut().insert(paid.clone());
         let (mut parts, _) = req.into_parts();

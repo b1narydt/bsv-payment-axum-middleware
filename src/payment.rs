@@ -5,9 +5,7 @@ use std::panic::AssertUnwindSafe;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use bsv::auth::utils::nonce::{create_nonce, verify_nonce};
 use bsv::primitives::public_key::PublicKey;
-use bsv::wallet::interfaces::{
-    InternalizeActionArgs, InternalizeOutput, Payment, WalletInterface,
-};
+use bsv::wallet::interfaces::{InternalizeActionArgs, InternalizeOutput, Payment, WalletInterface};
 use bsv::wallet::types::BooleanDefaultTrue;
 use futures_util::FutureExt;
 use http::request::Parts;
@@ -26,7 +24,10 @@ pub(crate) enum Outcome {
     /// Payment accepted — handler sees `Paid { satoshis_paid: <price>, .. }`;
     /// caller must inject the `x-bsv-payment-satoshis-paid` response header.
     #[allow(dead_code)] // consumed by Task 7 middleware glue
-    PaidSuccess { paid: Paid, satoshis_paid_header: u64 },
+    PaidSuccess {
+        paid: Paid,
+        satoshis_paid_header: u64,
+    },
 }
 
 /// Run the payment state machine.
@@ -83,8 +84,8 @@ pub(crate) async fn process_payment<W: WalletInterface + Clone + Send + Sync + '
     };
 
     // Step 4: Parse JSON body of header.
-    let hdr: BsvPaymentHeader = serde_json::from_str(header_str)
-        .map_err(|_| PaymentMiddlewareError::MalformedPayment)?;
+    let hdr: BsvPaymentHeader =
+        serde_json::from_str(header_str).map_err(|_| PaymentMiddlewareError::MalformedPayment)?;
 
     // Step 5: Verify nonce. Collapse Ok(false) and Err(_) to InvalidDerivationPrefix
     // (matches TS try { if (!valid) throw } catch).
@@ -191,7 +192,10 @@ mod tests {
         fn identity_key_hex(&self) -> String {
             self.0
                 .get_public_key_sync(
-                    &bsv::wallet::types::Protocol { security_level: 0, protocol: String::new() },
+                    &bsv::wallet::types::Protocol {
+                        security_level: 0,
+                        protocol: String::new(),
+                    },
                     "",
                     &bsv::wallet::types::Counterparty::default(),
                     false,
@@ -211,55 +215,105 @@ mod tests {
     #[async_trait::async_trait]
     impl WalletInterface for TestWallet {
         async fn create_action(
-            &self, _args: CreateActionArgs, _orig: Option<&str>,
-        ) -> Result<CreateActionResult, WalletError> { unimpl!("create_action") }
+            &self,
+            _args: CreateActionArgs,
+            _orig: Option<&str>,
+        ) -> Result<CreateActionResult, WalletError> {
+            unimpl!("create_action")
+        }
 
         async fn sign_action(
-            &self, _args: SignActionArgs, _orig: Option<&str>,
-        ) -> Result<SignActionResult, WalletError> { unimpl!("sign_action") }
+            &self,
+            _args: SignActionArgs,
+            _orig: Option<&str>,
+        ) -> Result<SignActionResult, WalletError> {
+            unimpl!("sign_action")
+        }
 
         async fn abort_action(
-            &self, _args: AbortActionArgs, _orig: Option<&str>,
-        ) -> Result<AbortActionResult, WalletError> { unimpl!("abort_action") }
+            &self,
+            _args: AbortActionArgs,
+            _orig: Option<&str>,
+        ) -> Result<AbortActionResult, WalletError> {
+            unimpl!("abort_action")
+        }
 
         async fn list_actions(
-            &self, _args: ListActionsArgs, _orig: Option<&str>,
-        ) -> Result<ListActionsResult, WalletError> { unimpl!("list_actions") }
+            &self,
+            _args: ListActionsArgs,
+            _orig: Option<&str>,
+        ) -> Result<ListActionsResult, WalletError> {
+            unimpl!("list_actions")
+        }
 
         async fn internalize_action(
-            &self, _args: InternalizeActionArgs, _orig: Option<&str>,
-        ) -> Result<InternalizeActionResult, WalletError> { unimpl!("internalize_action") }
+            &self,
+            _args: InternalizeActionArgs,
+            _orig: Option<&str>,
+        ) -> Result<InternalizeActionResult, WalletError> {
+            unimpl!("internalize_action")
+        }
 
         async fn list_outputs(
-            &self, _args: ListOutputsArgs, _orig: Option<&str>,
-        ) -> Result<ListOutputsResult, WalletError> { unimpl!("list_outputs") }
+            &self,
+            _args: ListOutputsArgs,
+            _orig: Option<&str>,
+        ) -> Result<ListOutputsResult, WalletError> {
+            unimpl!("list_outputs")
+        }
 
         async fn relinquish_output(
-            &self, _args: RelinquishOutputArgs, _orig: Option<&str>,
-        ) -> Result<RelinquishOutputResult, WalletError> { unimpl!("relinquish_output") }
+            &self,
+            _args: RelinquishOutputArgs,
+            _orig: Option<&str>,
+        ) -> Result<RelinquishOutputResult, WalletError> {
+            unimpl!("relinquish_output")
+        }
 
         async fn get_public_key(
-            &self, _args: GetPublicKeyArgs, _orig: Option<&str>,
-        ) -> Result<GetPublicKeyResult, WalletError> { unimpl!("get_public_key") }
+            &self,
+            _args: GetPublicKeyArgs,
+            _orig: Option<&str>,
+        ) -> Result<GetPublicKeyResult, WalletError> {
+            unimpl!("get_public_key")
+        }
 
         async fn reveal_counterparty_key_linkage(
-            &self, _args: RevealCounterpartyKeyLinkageArgs, _orig: Option<&str>,
-        ) -> Result<RevealCounterpartyKeyLinkageResult, WalletError> { unimpl!("reveal_counterparty") }
+            &self,
+            _args: RevealCounterpartyKeyLinkageArgs,
+            _orig: Option<&str>,
+        ) -> Result<RevealCounterpartyKeyLinkageResult, WalletError> {
+            unimpl!("reveal_counterparty")
+        }
 
         async fn reveal_specific_key_linkage(
-            &self, _args: RevealSpecificKeyLinkageArgs, _orig: Option<&str>,
-        ) -> Result<RevealSpecificKeyLinkageResult, WalletError> { unimpl!("reveal_specific") }
+            &self,
+            _args: RevealSpecificKeyLinkageArgs,
+            _orig: Option<&str>,
+        ) -> Result<RevealSpecificKeyLinkageResult, WalletError> {
+            unimpl!("reveal_specific")
+        }
 
         async fn encrypt(
-            &self, _args: EncryptArgs, _orig: Option<&str>,
-        ) -> Result<EncryptResult, WalletError> { unimpl!("encrypt") }
+            &self,
+            _args: EncryptArgs,
+            _orig: Option<&str>,
+        ) -> Result<EncryptResult, WalletError> {
+            unimpl!("encrypt")
+        }
 
         async fn decrypt(
-            &self, _args: DecryptArgs, _orig: Option<&str>,
-        ) -> Result<DecryptResult, WalletError> { unimpl!("decrypt") }
+            &self,
+            _args: DecryptArgs,
+            _orig: Option<&str>,
+        ) -> Result<DecryptResult, WalletError> {
+            unimpl!("decrypt")
+        }
 
         async fn create_hmac(
-            &self, args: CreateHmacArgs, _orig: Option<&str>,
+            &self,
+            args: CreateHmacArgs,
+            _orig: Option<&str>,
         ) -> Result<CreateHmacResult, WalletError> {
             let hmac = self.0.create_hmac_sync(
                 &args.data,
@@ -271,7 +325,9 @@ mod tests {
         }
 
         async fn verify_hmac(
-            &self, args: VerifyHmacArgs, _orig: Option<&str>,
+            &self,
+            args: VerifyHmacArgs,
+            _orig: Option<&str>,
         ) -> Result<VerifyHmacResult, WalletError> {
             let valid = self.0.verify_hmac_sync(
                 &args.data,
@@ -284,60 +340,102 @@ mod tests {
         }
 
         async fn create_signature(
-            &self, _args: CreateSignatureArgs, _orig: Option<&str>,
-        ) -> Result<CreateSignatureResult, WalletError> { unimpl!("create_signature") }
+            &self,
+            _args: CreateSignatureArgs,
+            _orig: Option<&str>,
+        ) -> Result<CreateSignatureResult, WalletError> {
+            unimpl!("create_signature")
+        }
 
         async fn verify_signature(
-            &self, _args: VerifySignatureArgs, _orig: Option<&str>,
-        ) -> Result<VerifySignatureResult, WalletError> { unimpl!("verify_signature") }
+            &self,
+            _args: VerifySignatureArgs,
+            _orig: Option<&str>,
+        ) -> Result<VerifySignatureResult, WalletError> {
+            unimpl!("verify_signature")
+        }
 
         async fn acquire_certificate(
-            &self, _args: AcquireCertificateArgs, _orig: Option<&str>,
-        ) -> Result<Certificate, WalletError> { unimpl!("acquire_certificate") }
+            &self,
+            _args: AcquireCertificateArgs,
+            _orig: Option<&str>,
+        ) -> Result<Certificate, WalletError> {
+            unimpl!("acquire_certificate")
+        }
 
         async fn list_certificates(
-            &self, _args: ListCertificatesArgs, _orig: Option<&str>,
-        ) -> Result<ListCertificatesResult, WalletError> { unimpl!("list_certificates") }
+            &self,
+            _args: ListCertificatesArgs,
+            _orig: Option<&str>,
+        ) -> Result<ListCertificatesResult, WalletError> {
+            unimpl!("list_certificates")
+        }
 
         async fn prove_certificate(
-            &self, _args: ProveCertificateArgs, _orig: Option<&str>,
-        ) -> Result<ProveCertificateResult, WalletError> { unimpl!("prove_certificate") }
+            &self,
+            _args: ProveCertificateArgs,
+            _orig: Option<&str>,
+        ) -> Result<ProveCertificateResult, WalletError> {
+            unimpl!("prove_certificate")
+        }
 
         async fn relinquish_certificate(
-            &self, _args: RelinquishCertificateArgs, _orig: Option<&str>,
-        ) -> Result<RelinquishCertificateResult, WalletError> { unimpl!("relinquish_cert") }
+            &self,
+            _args: RelinquishCertificateArgs,
+            _orig: Option<&str>,
+        ) -> Result<RelinquishCertificateResult, WalletError> {
+            unimpl!("relinquish_cert")
+        }
 
         async fn discover_by_identity_key(
-            &self, _args: DiscoverByIdentityKeyArgs, _orig: Option<&str>,
-        ) -> Result<DiscoverCertificatesResult, WalletError> { unimpl!("discover_by_identity") }
+            &self,
+            _args: DiscoverByIdentityKeyArgs,
+            _orig: Option<&str>,
+        ) -> Result<DiscoverCertificatesResult, WalletError> {
+            unimpl!("discover_by_identity")
+        }
 
         async fn discover_by_attributes(
-            &self, _args: DiscoverByAttributesArgs, _orig: Option<&str>,
-        ) -> Result<DiscoverCertificatesResult, WalletError> { unimpl!("discover_by_attrs") }
+            &self,
+            _args: DiscoverByAttributesArgs,
+            _orig: Option<&str>,
+        ) -> Result<DiscoverCertificatesResult, WalletError> {
+            unimpl!("discover_by_attrs")
+        }
 
         async fn is_authenticated(
-            &self, _orig: Option<&str>,
-        ) -> Result<AuthenticatedResult, WalletError> { unimpl!("is_authenticated") }
+            &self,
+            _orig: Option<&str>,
+        ) -> Result<AuthenticatedResult, WalletError> {
+            unimpl!("is_authenticated")
+        }
 
         async fn wait_for_authentication(
-            &self, _orig: Option<&str>,
-        ) -> Result<AuthenticatedResult, WalletError> { unimpl!("wait_for_auth") }
+            &self,
+            _orig: Option<&str>,
+        ) -> Result<AuthenticatedResult, WalletError> {
+            unimpl!("wait_for_auth")
+        }
 
-        async fn get_height(
-            &self, _orig: Option<&str>,
-        ) -> Result<GetHeightResult, WalletError> { unimpl!("get_height") }
+        async fn get_height(&self, _orig: Option<&str>) -> Result<GetHeightResult, WalletError> {
+            unimpl!("get_height")
+        }
 
         async fn get_header_for_height(
-            &self, _args: GetHeaderArgs, _orig: Option<&str>,
-        ) -> Result<GetHeaderResult, WalletError> { unimpl!("get_header") }
+            &self,
+            _args: GetHeaderArgs,
+            _orig: Option<&str>,
+        ) -> Result<GetHeaderResult, WalletError> {
+            unimpl!("get_header")
+        }
 
-        async fn get_network(
-            &self, _orig: Option<&str>,
-        ) -> Result<GetNetworkResult, WalletError> { unimpl!("get_network") }
+        async fn get_network(&self, _orig: Option<&str>) -> Result<GetNetworkResult, WalletError> {
+            unimpl!("get_network")
+        }
 
-        async fn get_version(
-            &self, _orig: Option<&str>,
-        ) -> Result<GetVersionResult, WalletError> { unimpl!("get_version") }
+        async fn get_version(&self, _orig: Option<&str>) -> Result<GetVersionResult, WalletError> {
+            unimpl!("get_version")
+        }
     }
 
     // ---------------------------------------------------------------------------
@@ -401,7 +499,10 @@ mod tests {
         let parts = make_parts("/paid", None);
         let err = process_payment(&parts, &id, &cfg).await.unwrap_err();
         match err {
-            crate::PaymentMiddlewareError::PaymentRequired { satoshis, derivation_prefix } => {
+            crate::PaymentMiddlewareError::PaymentRequired {
+                satoshis,
+                derivation_prefix,
+            } => {
                 assert_eq!(satoshis, 50);
                 assert!(!derivation_prefix.is_empty());
                 // Prefix must be valid base64.
@@ -418,7 +519,10 @@ mod tests {
         let cfg = paid_config(w, 10);
         let parts = make_parts("/paid", Some("{not json"));
         let err = process_payment(&parts, &id, &cfg).await.unwrap_err();
-        assert!(matches!(err, crate::PaymentMiddlewareError::MalformedPayment));
+        assert!(matches!(
+            err,
+            crate::PaymentMiddlewareError::MalformedPayment
+        ));
     }
 
     #[tokio::test]
@@ -430,7 +534,10 @@ mod tests {
         let body = r#"{"derivationPrefix":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","derivationSuffix":"c2ZmZg==","transaction":"dHg="}"#;
         let parts = make_parts("/paid", Some(body));
         let err = process_payment(&parts, &id, &cfg).await.unwrap_err();
-        assert!(matches!(err, crate::PaymentMiddlewareError::InvalidDerivationPrefix));
+        assert!(matches!(
+            err,
+            crate::PaymentMiddlewareError::InvalidDerivationPrefix
+        ));
     }
 
     /// Async panic inside the price future is caught and returned as PriceCalculationFailed.
@@ -445,6 +552,9 @@ mod tests {
             .unwrap();
         let parts = make_parts("/paid", None);
         let err = process_payment(&parts, &id, &cfg).await.unwrap_err();
-        assert!(matches!(err, crate::PaymentMiddlewareError::PriceCalculationFailed));
+        assert!(matches!(
+            err,
+            crate::PaymentMiddlewareError::PriceCalculationFailed
+        ));
     }
 }

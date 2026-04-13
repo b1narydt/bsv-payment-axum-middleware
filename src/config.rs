@@ -70,9 +70,9 @@ impl<W: Clone + Send + Sync + 'static> PaymentMiddlewareConfigBuilder<W> {
     /// Finalize the builder.
     pub fn build(self) -> Result<PaymentMiddlewareConfig<W>, ConfigError> {
         let wallet = self.wallet.ok_or(ConfigError::WalletNotSet)?;
-        let calculate_request_price = self.calculate_request_price.unwrap_or_else(|| {
-            Arc::new(|_: &Parts| -> PriceFuture { Box::pin(async { 100 }) })
-        });
+        let calculate_request_price = self
+            .calculate_request_price
+            .unwrap_or_else(|| Arc::new(|_: &Parts| -> PriceFuture { Box::pin(async { 100 }) }));
         Ok(PaymentMiddlewareConfig {
             wallet,
             calculate_request_price,
@@ -121,13 +121,29 @@ mod tests {
             .wallet(test_wallet())
             .calculate_request_price(|parts| {
                 let path = parts.uri.path().to_string();
-                Box::pin(async move { if path == "/free" { 0 } else { 42 } })
+                Box::pin(async move {
+                    if path == "/free" {
+                        0
+                    } else {
+                        42
+                    }
+                })
             })
             .build()
             .unwrap();
 
-        let free = http::Request::builder().uri("/free").body(()).unwrap().into_parts().0;
-        let paid = http::Request::builder().uri("/paid").body(()).unwrap().into_parts().0;
+        let free = http::Request::builder()
+            .uri("/free")
+            .body(())
+            .unwrap()
+            .into_parts()
+            .0;
+        let paid = http::Request::builder()
+            .uri("/paid")
+            .body(())
+            .unwrap()
+            .into_parts()
+            .0;
         assert_eq!((config.calculate_request_price)(&free).await, 0);
         assert_eq!((config.calculate_request_price)(&paid).await, 42);
     }

@@ -51,7 +51,9 @@ use bsv::wallet::interfaces::{
     VerifyHmacArgs, VerifyHmacResult, VerifySignatureArgs, VerifySignatureResult, WalletInterface,
 };
 use bsv::wallet::proto_wallet::ProtoWallet;
-use bsv_auth_axum_middleware::{ActixTransport, AuthLayer, AuthMiddlewareConfigBuilder, Authenticated};
+use bsv_auth_axum_middleware::{
+    ActixTransport, AuthLayer, AuthMiddlewareConfigBuilder, Authenticated,
+};
 use bsv_payment_axum_middleware::{Paid, PaymentLayer, PaymentMiddlewareConfigBuilder};
 use tokio::sync::Mutex;
 
@@ -76,25 +78,33 @@ impl ExampleWallet {
 #[async_trait]
 impl WalletInterface for ExampleWallet {
     async fn create_action(
-        &self, args: CreateActionArgs, orig: Option<&str>,
+        &self,
+        args: CreateActionArgs,
+        orig: Option<&str>,
     ) -> Result<CreateActionResult, WalletError> {
         WalletInterface::create_action(&*self.0, args, orig).await
     }
 
     async fn sign_action(
-        &self, args: SignActionArgs, orig: Option<&str>,
+        &self,
+        args: SignActionArgs,
+        orig: Option<&str>,
     ) -> Result<SignActionResult, WalletError> {
         WalletInterface::sign_action(&*self.0, args, orig).await
     }
 
     async fn abort_action(
-        &self, args: AbortActionArgs, orig: Option<&str>,
+        &self,
+        args: AbortActionArgs,
+        orig: Option<&str>,
     ) -> Result<AbortActionResult, WalletError> {
         WalletInterface::abort_action(&*self.0, args, orig).await
     }
 
     async fn list_actions(
-        &self, args: ListActionsArgs, orig: Option<&str>,
+        &self,
+        args: ListActionsArgs,
+        orig: Option<&str>,
     ) -> Result<ListActionsResult, WalletError> {
         WalletInterface::list_actions(&*self.0, args, orig).await
     }
@@ -102,7 +112,9 @@ impl WalletInterface for ExampleWallet {
     /// Accept every inbound payment. A production wallet would validate the
     /// transaction, check the output value matches the price, and persist it.
     async fn internalize_action(
-        &self, args: InternalizeActionArgs, _orig: Option<&str>,
+        &self,
+        args: InternalizeActionArgs,
+        _orig: Option<&str>,
     ) -> Result<InternalizeActionResult, WalletError> {
         println!(
             "[ExampleWallet] internalize_action: accepting payment ({} outputs)",
@@ -112,115 +124,151 @@ impl WalletInterface for ExampleWallet {
     }
 
     async fn list_outputs(
-        &self, args: ListOutputsArgs, orig: Option<&str>,
+        &self,
+        args: ListOutputsArgs,
+        orig: Option<&str>,
     ) -> Result<ListOutputsResult, WalletError> {
         WalletInterface::list_outputs(&*self.0, args, orig).await
     }
 
     async fn relinquish_output(
-        &self, args: RelinquishOutputArgs, orig: Option<&str>,
+        &self,
+        args: RelinquishOutputArgs,
+        orig: Option<&str>,
     ) -> Result<RelinquishOutputResult, WalletError> {
         WalletInterface::relinquish_output(&*self.0, args, orig).await
     }
 
     async fn get_public_key(
-        &self, args: GetPublicKeyArgs, orig: Option<&str>,
+        &self,
+        args: GetPublicKeyArgs,
+        orig: Option<&str>,
     ) -> Result<GetPublicKeyResult, WalletError> {
         WalletInterface::get_public_key(&*self.0, args, orig).await
     }
 
     async fn reveal_counterparty_key_linkage(
-        &self, args: RevealCounterpartyKeyLinkageArgs, orig: Option<&str>,
+        &self,
+        args: RevealCounterpartyKeyLinkageArgs,
+        orig: Option<&str>,
     ) -> Result<RevealCounterpartyKeyLinkageResult, WalletError> {
         WalletInterface::reveal_counterparty_key_linkage(&*self.0, args, orig).await
     }
 
     async fn reveal_specific_key_linkage(
-        &self, args: RevealSpecificKeyLinkageArgs, orig: Option<&str>,
+        &self,
+        args: RevealSpecificKeyLinkageArgs,
+        orig: Option<&str>,
     ) -> Result<RevealSpecificKeyLinkageResult, WalletError> {
         WalletInterface::reveal_specific_key_linkage(&*self.0, args, orig).await
     }
 
     async fn encrypt(
-        &self, args: EncryptArgs, orig: Option<&str>,
+        &self,
+        args: EncryptArgs,
+        orig: Option<&str>,
     ) -> Result<EncryptResult, WalletError> {
         WalletInterface::encrypt(&*self.0, args, orig).await
     }
 
     async fn decrypt(
-        &self, args: DecryptArgs, orig: Option<&str>,
+        &self,
+        args: DecryptArgs,
+        orig: Option<&str>,
     ) -> Result<DecryptResult, WalletError> {
         WalletInterface::decrypt(&*self.0, args, orig).await
     }
 
     async fn create_hmac(
-        &self, args: CreateHmacArgs, orig: Option<&str>,
+        &self,
+        args: CreateHmacArgs,
+        orig: Option<&str>,
     ) -> Result<CreateHmacResult, WalletError> {
         WalletInterface::create_hmac(&*self.0, args, orig).await
     }
 
     async fn verify_hmac(
-        &self, args: VerifyHmacArgs, orig: Option<&str>,
+        &self,
+        args: VerifyHmacArgs,
+        orig: Option<&str>,
     ) -> Result<VerifyHmacResult, WalletError> {
         WalletInterface::verify_hmac(&*self.0, args, orig).await
     }
 
     async fn create_signature(
-        &self, args: CreateSignatureArgs, orig: Option<&str>,
+        &self,
+        args: CreateSignatureArgs,
+        orig: Option<&str>,
     ) -> Result<CreateSignatureResult, WalletError> {
         WalletInterface::create_signature(&*self.0, args, orig).await
     }
 
     async fn verify_signature(
-        &self, args: VerifySignatureArgs, orig: Option<&str>,
+        &self,
+        args: VerifySignatureArgs,
+        orig: Option<&str>,
     ) -> Result<VerifySignatureResult, WalletError> {
         WalletInterface::verify_signature(&*self.0, args, orig).await
     }
 
     async fn acquire_certificate(
-        &self, args: AcquireCertificateArgs, orig: Option<&str>,
+        &self,
+        args: AcquireCertificateArgs,
+        orig: Option<&str>,
     ) -> Result<Certificate, WalletError> {
         WalletInterface::acquire_certificate(&*self.0, args, orig).await
     }
 
     async fn list_certificates(
-        &self, args: ListCertificatesArgs, orig: Option<&str>,
+        &self,
+        args: ListCertificatesArgs,
+        orig: Option<&str>,
     ) -> Result<ListCertificatesResult, WalletError> {
         WalletInterface::list_certificates(&*self.0, args, orig).await
     }
 
     async fn prove_certificate(
-        &self, args: ProveCertificateArgs, orig: Option<&str>,
+        &self,
+        args: ProveCertificateArgs,
+        orig: Option<&str>,
     ) -> Result<ProveCertificateResult, WalletError> {
         WalletInterface::prove_certificate(&*self.0, args, orig).await
     }
 
     async fn relinquish_certificate(
-        &self, args: RelinquishCertificateArgs, orig: Option<&str>,
+        &self,
+        args: RelinquishCertificateArgs,
+        orig: Option<&str>,
     ) -> Result<RelinquishCertificateResult, WalletError> {
         WalletInterface::relinquish_certificate(&*self.0, args, orig).await
     }
 
     async fn discover_by_identity_key(
-        &self, args: DiscoverByIdentityKeyArgs, orig: Option<&str>,
+        &self,
+        args: DiscoverByIdentityKeyArgs,
+        orig: Option<&str>,
     ) -> Result<DiscoverCertificatesResult, WalletError> {
         WalletInterface::discover_by_identity_key(&*self.0, args, orig).await
     }
 
     async fn discover_by_attributes(
-        &self, args: DiscoverByAttributesArgs, orig: Option<&str>,
+        &self,
+        args: DiscoverByAttributesArgs,
+        orig: Option<&str>,
     ) -> Result<DiscoverCertificatesResult, WalletError> {
         WalletInterface::discover_by_attributes(&*self.0, args, orig).await
     }
 
     async fn is_authenticated(
-        &self, orig: Option<&str>,
+        &self,
+        orig: Option<&str>,
     ) -> Result<AuthenticatedResult, WalletError> {
         WalletInterface::is_authenticated(&*self.0, orig).await
     }
 
     async fn wait_for_authentication(
-        &self, orig: Option<&str>,
+        &self,
+        orig: Option<&str>,
     ) -> Result<AuthenticatedResult, WalletError> {
         WalletInterface::wait_for_authentication(&*self.0, orig).await
     }
@@ -230,7 +278,9 @@ impl WalletInterface for ExampleWallet {
     }
 
     async fn get_header_for_height(
-        &self, args: GetHeaderArgs, orig: Option<&str>,
+        &self,
+        args: GetHeaderArgs,
+        orig: Option<&str>,
     ) -> Result<GetHeaderResult, WalletError> {
         WalletInterface::get_header_for_height(&*self.0, args, orig).await
     }

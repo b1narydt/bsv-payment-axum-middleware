@@ -97,7 +97,10 @@ async fn happy_path_paid_route() {
     );
 
     let body: Value = serde_json::from_slice(&resp_200.body).unwrap();
-    assert_eq!(body["temp_f"], 72, "weather handler should return temp_f=72");
+    assert_eq!(
+        body["temp_f"], 72,
+        "weather handler should return temp_f=72"
+    );
 }
 
 #[tokio::test]
@@ -112,7 +115,10 @@ async fn free_route_bypasses_payment() {
         .await
         .expect("free route should succeed without payment");
 
-    assert_eq!(resp.status, 200, "free route should return 200 on first hit");
+    assert_eq!(
+        resp.status, 200,
+        "free route should return 200 on first hit"
+    );
     assert!(
         !resp.headers.contains_key("x-bsv-payment-satoshis-paid"),
         "free route should NOT set the satoshis-paid header; got: {:?}",
@@ -209,11 +215,15 @@ async fn paid_route_returns_402_on_first_hit() {
 
     assert_eq!(resp.status, 402);
     assert_eq!(
-        resp.headers.get("x-bsv-payment-version").map(|s| s.as_str()),
+        resp.headers
+            .get("x-bsv-payment-version")
+            .map(|s| s.as_str()),
         Some("1.0"),
     );
     assert_eq!(
-        resp.headers.get("x-bsv-payment-satoshis-required").map(|s| s.as_str()),
+        resp.headers
+            .get("x-bsv-payment-satoshis-required")
+            .map(|s| s.as_str()),
         Some("10"),
     );
     assert!(resp.headers.contains_key("x-bsv-payment-derivation-prefix"));
@@ -240,10 +250,11 @@ async fn malformed_payment_header_returns_400() {
     let _ = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
 
     // Retry with deliberately malformed x-bsv-payment header.
-    let headers = HashMap::from([
-        ("x-bsv-payment".to_string(), "not valid json".to_string()),
-    ]);
-    let resp = auth_fetch.fetch(&url, "GET", None, Some(headers)).await.unwrap();
+    let headers = HashMap::from([("x-bsv-payment".to_string(), "not valid json".to_string())]);
+    let resp = auth_fetch
+        .fetch(&url, "GET", None, Some(headers))
+        .await
+        .unwrap();
 
     assert_eq!(resp.status, 400);
     let body: Value = serde_json::from_slice(&resp.body).unwrap();
@@ -268,10 +279,11 @@ async fn invalid_derivation_prefix_returns_400() {
     // Construct a well-formed JSON body with a valid-base64 prefix that won't verify.
     // 32 zero bytes base64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".
     let bogus = r#"{"derivationPrefix":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","derivationSuffix":"c2ZmZg==","transaction":"dHg="}"#;
-    let headers = HashMap::from([
-        ("x-bsv-payment".to_string(), bogus.to_string()),
-    ]);
-    let resp = auth_fetch.fetch(&url, "GET", None, Some(headers)).await.unwrap();
+    let headers = HashMap::from([("x-bsv-payment".to_string(), bogus.to_string())]);
+    let resp = auth_fetch
+        .fetch(&url, "GET", None, Some(headers))
+        .await
+        .unwrap();
 
     assert_eq!(resp.status, 400);
     let body: Value = serde_json::from_slice(&resp.body).unwrap();
@@ -329,7 +341,9 @@ async fn missing_auth_returns_500() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status().as_u16(), 500);
 
-    let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+    let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let json: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(json["code"], "ERR_SERVER_MISCONFIGURED");
     assert_eq!(
@@ -354,9 +368,7 @@ async fn concurrent_paid_requests_have_unique_prefixes() {
 
     let futures = clients.iter_mut().map(|af| {
         let url = format!("{}/weather", base_url);
-        async move {
-            af.fetch(&url, "GET", None, None).await.unwrap()
-        }
+        async move { af.fetch(&url, "GET", None, None).await.unwrap() }
     });
 
     let responses = join_all(futures).await;
@@ -372,5 +384,9 @@ async fn concurrent_paid_requests_have_unique_prefixes() {
         prefixes.insert(prefix);
     }
 
-    assert_eq!(prefixes.len(), 5, "all 5 derivation prefixes must be distinct");
+    assert_eq!(
+        prefixes.len(),
+        5,
+        "all 5 derivation prefixes must be distinct"
+    );
 }

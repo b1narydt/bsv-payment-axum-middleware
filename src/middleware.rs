@@ -93,7 +93,10 @@ where
                     let req = Request::from_parts(parts, body);
                     inner.call(req).await
                 }
-                Ok(Outcome::PaidSuccess { paid, satoshis_paid_header }) => {
+                Ok(Outcome::PaidSuccess {
+                    paid,
+                    satoshis_paid_header,
+                }) => {
                     parts.extensions.insert(paid);
                     let req = Request::from_parts(parts, body);
                     let mut resp = inner.call(req).await?;

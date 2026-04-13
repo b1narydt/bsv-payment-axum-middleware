@@ -11,7 +11,9 @@ use axum::routing::get;
 use axum::Router;
 use bsv::auth::peer::Peer;
 use bsv::primitives::private_key::PrivateKey;
-use bsv_auth_axum_middleware::{ActixTransport, AuthLayer, AuthMiddlewareConfigBuilder, Authenticated};
+use bsv_auth_axum_middleware::{
+    ActixTransport, AuthLayer, AuthMiddlewareConfigBuilder, Authenticated,
+};
 use bsv_payment_axum_middleware::{Paid, PaymentLayer, PaymentMiddlewareConfigBuilder};
 use tokio::net::TcpListener;
 use tokio::sync::OnceCell;

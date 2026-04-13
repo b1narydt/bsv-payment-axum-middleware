@@ -113,11 +113,13 @@ fn payment_required_response(satoshis: u64, derivation_prefix: &str) -> Response
         .into_response();
 
     let headers = resp.headers_mut();
-    headers.insert("x-bsv-payment-version", HeaderValue::from_static(crate::PAYMENT_VERSION));
+    headers.insert(
+        "x-bsv-payment-version",
+        HeaderValue::from_static(crate::PAYMENT_VERSION),
+    );
     headers.insert(
         "x-bsv-payment-satoshis-required",
-        HeaderValue::from_str(&satoshis.to_string())
-            .expect("u64 to_string is always valid ASCII"),
+        HeaderValue::from_str(&satoshis.to_string()).expect("u64 to_string is always valid ASCII"),
     );
     headers.insert(
         "x-bsv-payment-derivation-prefix",

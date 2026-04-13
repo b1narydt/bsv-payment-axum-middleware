@@ -36,8 +36,14 @@ mod tests {
     fn header_name_constants_are_lowercase() {
         assert_eq!(X_BSV_PAYMENT, "x-bsv-payment");
         assert_eq!(X_BSV_PAYMENT_VERSION, "x-bsv-payment-version");
-        assert_eq!(X_BSV_PAYMENT_SATOSHIS_REQUIRED, "x-bsv-payment-satoshis-required");
-        assert_eq!(X_BSV_PAYMENT_DERIVATION_PREFIX, "x-bsv-payment-derivation-prefix");
+        assert_eq!(
+            X_BSV_PAYMENT_SATOSHIS_REQUIRED,
+            "x-bsv-payment-satoshis-required"
+        );
+        assert_eq!(
+            X_BSV_PAYMENT_DERIVATION_PREFIX,
+            "x-bsv-payment-derivation-prefix"
+        );
         assert_eq!(X_BSV_PAYMENT_SATOSHIS_PAID, "x-bsv-payment-satoshis-paid");
     }
 
