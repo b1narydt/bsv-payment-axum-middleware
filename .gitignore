@@ -1,0 +1,15 @@
+# Rust build artifacts
+/target/
+
+# Cargo lockfile: this is a library crate, so don't track the lockfile
+# (per the Cargo book's guidance for libraries).
+/Cargo.lock
+
+# macOS
+.DS_Store
+
+# Editor cruft
+*.swp
+*.swo
+.idea/
+.vscode/
