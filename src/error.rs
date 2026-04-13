@@ -99,6 +99,7 @@ fn json_error_response(status: StatusCode, code: &str, description: &str) -> Res
         .into_response()
 }
 
+/// Build the 402 Payment Required response with TS-parity headers and body.
 fn payment_required_response(satoshis: u64, derivation_prefix: &str) -> Response {
     let mut resp = (
         StatusCode::PAYMENT_REQUIRED,
@@ -115,11 +116,13 @@ fn payment_required_response(satoshis: u64, derivation_prefix: &str) -> Response
     headers.insert("x-bsv-payment-version", HeaderValue::from_static(crate::PAYMENT_VERSION));
     headers.insert(
         "x-bsv-payment-satoshis-required",
-        HeaderValue::from_str(&satoshis.to_string()).unwrap(),
+        HeaderValue::from_str(&satoshis.to_string())
+            .expect("u64 to_string is always valid ASCII"),
     );
     headers.insert(
         "x-bsv-payment-derivation-prefix",
-        HeaderValue::from_str(derivation_prefix).unwrap_or(HeaderValue::from_static("")),
+        HeaderValue::from_str(derivation_prefix)
+            .expect("base64 nonces contain only HTTP-header-safe characters"),
     );
     resp
 }
