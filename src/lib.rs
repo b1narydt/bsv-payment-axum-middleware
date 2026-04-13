@@ -18,6 +18,7 @@ mod config;
 mod error;
 mod extractor;
 mod headers;
+mod middleware;
 mod payment;
 
 pub use config::{
@@ -29,3 +30,4 @@ pub use headers::{
     BsvPaymentHeader, X_BSV_PAYMENT, X_BSV_PAYMENT_DERIVATION_PREFIX,
     X_BSV_PAYMENT_SATOSHIS_PAID, X_BSV_PAYMENT_SATOSHIS_REQUIRED, X_BSV_PAYMENT_VERSION,
 };
+pub use middleware::{PaymentLayer, PaymentService};
