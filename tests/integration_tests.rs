@@ -99,3 +99,99 @@ async fn happy_path_paid_route() {
     let body: Value = serde_json::from_slice(&resp_200.body).unwrap();
     assert_eq!(body["temp_f"], 72, "weather handler should return temp_f=72");
 }
+
+#[tokio::test]
+async fn free_route_bypasses_payment() {
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/free", base_url);
+    let resp = auth_fetch
+        .fetch(&url, "GET", None, None)
+        .await
+        .expect("free route should succeed without payment");
+
+    assert_eq!(resp.status, 200, "free route should return 200 on first hit");
+    assert!(
+        !resp.headers.contains_key("x-bsv-payment-satoshis-paid"),
+        "free route should NOT set the satoshis-paid header; got: {:?}",
+        resp.headers.get("x-bsv-payment-satoshis-paid")
+    );
+    let body: Value = serde_json::from_slice(&resp.body).unwrap();
+    assert_eq!(body["satoshisPaid"], 0);
+    assert_eq!(body["hasTx"], false);
+}
+
+#[tokio::test]
+async fn paid_extractor_fields_populated() {
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/echo-paid", base_url);
+
+    // 1st fetch — expect 402, capture prefix.
+    let resp = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
+    assert_eq!(resp.status, 402);
+    let prefix = resp
+        .headers
+        .get("x-bsv-payment-derivation-prefix")
+        .expect("402 must carry derivation prefix")
+        .clone();
+
+    // 2nd fetch — retry with x-bsv-payment header.
+    let headers = HashMap::from([("x-bsv-payment".to_string(), payment_header(&prefix))]);
+    let resp = auth_fetch
+        .fetch(&url, "GET", None, Some(headers))
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status, 200);
+    let body: Value = serde_json::from_slice(&resp.body).unwrap();
+    assert_eq!(body["satoshisPaid"], 10, "echo-paid uses default price 10");
+    assert_eq!(body["accepted"], true);
+    assert_eq!(body["hasTx"], true);
+}
+
+#[tokio::test]
+async fn different_prices_per_route() {
+    // /free = 0 (covered by free_route_bypasses_payment)
+    // /weather = 10 (covered by happy_path_paid_route)
+    // /expensive = 1000 — assert here
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/expensive", base_url);
+
+    // 1st fetch — expect 402 with satoshis-required: 1000.
+    let resp = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
+    assert_eq!(resp.status, 402);
+    assert_eq!(
+        resp.headers
+            .get("x-bsv-payment-satoshis-required")
+            .map(|s| s.as_str()),
+        Some("1000"),
+        "/expensive should demand 1000 sats"
+    );
+    let prefix = resp
+        .headers
+        .get("x-bsv-payment-derivation-prefix")
+        .unwrap()
+        .clone();
+
+    // 2nd fetch — succeed.
+    let headers = HashMap::from([("x-bsv-payment".to_string(), payment_header(&prefix))]);
+    let resp = auth_fetch
+        .fetch(&url, "GET", None, Some(headers))
+        .await
+        .unwrap();
+    assert_eq!(resp.status, 200);
+    assert_eq!(
+        resp.headers
+            .get("x-bsv-payment-satoshis-paid")
+            .map(|s| s.as_str()),
+        Some("1000")
+    );
+}
