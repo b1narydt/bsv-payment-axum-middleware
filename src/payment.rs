@@ -40,8 +40,16 @@ pub(crate) async fn process_payment<W: WalletInterface + Clone + Send + Sync + '
     config: &PaymentMiddlewareConfig<W>,
 ) -> Result<Outcome, PaymentMiddlewareError> {
     // Step 1: Compute price (panics → PriceCalculationFailed, logged).
-    let price_fut = (config.calculate_request_price)(parts);
-    let price = match AssertUnwindSafe(price_fut).catch_unwind().await {
+    // Wrap BOTH the closure call and the .await in a single AssertUnwindSafe block
+    // so that a synchronous panic in the closure body (before it returns the future)
+    // is caught in addition to async panics inside the returned future.
+    let price_result = AssertUnwindSafe(async {
+        let fut = (config.calculate_request_price)(parts);
+        fut.await
+    })
+    .catch_unwind()
+    .await;
+    let price = match price_result {
         Ok(p) => p,
         Err(_) => {
             tracing::error!("price calculation closure panicked");
@@ -423,5 +431,20 @@ mod tests {
         let parts = make_parts("/paid", Some(body));
         let err = process_payment(&parts, &id, &cfg).await.unwrap_err();
         assert!(matches!(err, crate::PaymentMiddlewareError::InvalidDerivationPrefix));
+    }
+
+    /// Async panic inside the price future is caught and returned as PriceCalculationFailed.
+    #[tokio::test]
+    async fn panicking_price_fn_returns_price_calculation_failed() {
+        let w = test_wallet();
+        let id = w.identity_key_hex();
+        let cfg = PaymentMiddlewareConfigBuilder::new()
+            .wallet(w)
+            .calculate_request_price(|_| Box::pin(async { panic!("boom") }))
+            .build()
+            .unwrap();
+        let parts = make_parts("/paid", None);
+        let err = process_payment(&parts, &id, &cfg).await.unwrap_err();
+        assert!(matches!(err, crate::PaymentMiddlewareError::PriceCalculationFailed));
     }
 }
