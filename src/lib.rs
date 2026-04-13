@@ -16,12 +16,14 @@ pub const PAYMENT_VERSION: &str = "1.0";
 
 mod config;
 mod error;
+mod extractor;
 mod headers;
 
 pub use config::{
     ConfigError, PaymentMiddlewareConfig, PaymentMiddlewareConfigBuilder, PriceFn, PriceFuture,
 };
 pub use error::PaymentMiddlewareError;
+pub use extractor::Paid;
 pub use headers::{
     BsvPaymentHeader, X_BSV_PAYMENT, X_BSV_PAYMENT_DERIVATION_PREFIX,
     X_BSV_PAYMENT_SATOSHIS_PAID, X_BSV_PAYMENT_SATOSHIS_REQUIRED, X_BSV_PAYMENT_VERSION,
