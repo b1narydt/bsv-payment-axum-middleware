@@ -337,3 +337,40 @@ async fn missing_auth_returns_500() {
         "The payment middleware must be executed after the Auth middleware."
     );
 }
+
+#[tokio::test]
+async fn concurrent_paid_requests_have_unique_prefixes() {
+    use futures_util::future::join_all;
+    use std::collections::HashSet;
+
+    let base_url = get_server_url().await;
+
+    // Five independent clients, each with its own MockWallet identity.
+    // Using separate clients ensures the 402s come from independent auth
+    // sessions — any shared-state nonce bug would surface here.
+    let mut clients: Vec<AuthFetch<MockWallet>> = (0..5)
+        .map(|_| AuthFetch::new(MockWallet::new(PrivateKey::from_random().unwrap())))
+        .collect();
+
+    let futures = clients.iter_mut().map(|af| {
+        let url = format!("{}/weather", base_url);
+        async move {
+            af.fetch(&url, "GET", None, None).await.unwrap()
+        }
+    });
+
+    let responses = join_all(futures).await;
+
+    let mut prefixes = HashSet::new();
+    for resp in responses {
+        assert_eq!(resp.status, 402, "expected 402 Payment Required");
+        let prefix = resp
+            .headers
+            .get("x-bsv-payment-derivation-prefix")
+            .expect("402 must carry derivation prefix")
+            .clone();
+        prefixes.insert(prefix);
+    }
+
+    assert_eq!(prefixes.len(), 5, "all 5 derivation prefixes must be distinct");
+}
