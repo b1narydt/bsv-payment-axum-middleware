@@ -14,9 +14,13 @@
 /// Fixed protocol version string emitted on the `x-bsv-payment-version` header.
 pub const PAYMENT_VERSION: &str = "1.0";
 
+mod config;
 mod error;
 mod headers;
 
+pub use config::{
+    ConfigError, PaymentMiddlewareConfig, PaymentMiddlewareConfigBuilder, PriceFn, PriceFuture,
+};
 pub use error::PaymentMiddlewareError;
 pub use headers::{
     BsvPaymentHeader, X_BSV_PAYMENT, X_BSV_PAYMENT_DERIVATION_PREFIX,
