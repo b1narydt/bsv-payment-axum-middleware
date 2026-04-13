@@ -195,3 +195,145 @@ async fn different_prices_per_route() {
         Some("1000")
     );
 }
+
+#[tokio::test]
+async fn paid_route_returns_402_on_first_hit() {
+    // Asserts the 402 response shape end-to-end (headers + body).
+    // This is `/weather` (price 10), first hit only.
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/weather", base_url);
+    let resp = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
+
+    assert_eq!(resp.status, 402);
+    assert_eq!(
+        resp.headers.get("x-bsv-payment-version").map(|s| s.as_str()),
+        Some("1.0"),
+    );
+    assert_eq!(
+        resp.headers.get("x-bsv-payment-satoshis-required").map(|s| s.as_str()),
+        Some("10"),
+    );
+    assert!(resp.headers.contains_key("x-bsv-payment-derivation-prefix"));
+
+    let body: Value = serde_json::from_slice(&resp.body).unwrap();
+    assert_eq!(body["status"], "error");
+    assert_eq!(body["code"], "ERR_PAYMENT_REQUIRED");
+    assert_eq!(body["satoshisRequired"], 10);
+    assert_eq!(
+        body["description"],
+        "A BSV payment is required to complete this request. Provide the X-BSV-Payment header."
+    );
+}
+
+#[tokio::test]
+async fn malformed_payment_header_returns_400() {
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/weather", base_url);
+
+    // Do the 402 handshake first so auth session is established.
+    let _ = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
+
+    // Retry with deliberately malformed x-bsv-payment header.
+    let headers = HashMap::from([
+        ("x-bsv-payment".to_string(), "not valid json".to_string()),
+    ]);
+    let resp = auth_fetch.fetch(&url, "GET", None, Some(headers)).await.unwrap();
+
+    assert_eq!(resp.status, 400);
+    let body: Value = serde_json::from_slice(&resp.body).unwrap();
+    assert_eq!(body["code"], "ERR_MALFORMED_PAYMENT");
+    assert_eq!(
+        body["description"],
+        "The X-BSV-Payment header is not valid JSON."
+    );
+}
+
+#[tokio::test]
+async fn invalid_derivation_prefix_returns_400() {
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/weather", base_url);
+
+    // Make one 402 roundtrip to establish session.
+    let _ = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
+
+    // Construct a well-formed JSON body with a valid-base64 prefix that won't verify.
+    // 32 zero bytes base64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".
+    let bogus = r#"{"derivationPrefix":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","derivationSuffix":"c2ZmZg==","transaction":"dHg="}"#;
+    let headers = HashMap::from([
+        ("x-bsv-payment".to_string(), bogus.to_string()),
+    ]);
+    let resp = auth_fetch.fetch(&url, "GET", None, Some(headers)).await.unwrap();
+
+    assert_eq!(resp.status, 400);
+    let body: Value = serde_json::from_slice(&resp.body).unwrap();
+    assert_eq!(body["code"], "ERR_INVALID_DERIVATION_PREFIX");
+    assert_eq!(
+        body["description"],
+        "The X-BSV-Payment-Derivation-Prefix header is not valid."
+    );
+}
+
+#[tokio::test]
+async fn price_fn_panic_returns_500() {
+    // /panic route: the server-side price-calculation closure does `panic!(...)`.
+    // PaymentService must catch and return 500 ERR_PAYMENT_INTERNAL without
+    // leaking the panic message.
+    let base_url = get_server_url().await;
+    let client_wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let mut auth_fetch = AuthFetch::new(client_wallet);
+
+    let url = format!("{}/panic", base_url);
+    let resp = auth_fetch.fetch(&url, "GET", None, None).await.unwrap();
+
+    assert_eq!(resp.status, 500);
+    let body: Value = serde_json::from_slice(&resp.body).unwrap();
+    assert_eq!(body["code"], "ERR_PAYMENT_INTERNAL");
+    assert_eq!(
+        body["description"],
+        "An internal error occurred while determining the payment required for this request.",
+        "panic message must not leak"
+    );
+}
+
+#[tokio::test]
+async fn missing_auth_returns_500() {
+    // Minimal axum Router with ONLY PaymentLayer mounted (no AuthLayer).
+    // A request without the Authenticated extension must be rejected with 500.
+    use axum::body::Body;
+    use axum::http::Request;
+    use axum::routing::get;
+    use axum::Router;
+    use bsv_payment_axum_middleware::{PaymentLayer, PaymentMiddlewareConfigBuilder};
+    use tower::ServiceExt;
+
+    let wallet = MockWallet::new(PrivateKey::from_random().unwrap());
+    let cfg = PaymentMiddlewareConfigBuilder::new()
+        .wallet(wallet)
+        .build()
+        .unwrap();
+
+    let app = Router::new()
+        .route("/", get(|| async { "ok" }))
+        .layer(PaymentLayer::from_config(cfg));
+
+    let req = Request::builder().uri("/").body(Body::empty()).unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status().as_u16(), 500);
+
+    let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+    let json: Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(json["code"], "ERR_SERVER_MISCONFIGURED");
+    assert_eq!(
+        json["description"],
+        "The payment middleware must be executed after the Auth middleware."
+    );
+}
