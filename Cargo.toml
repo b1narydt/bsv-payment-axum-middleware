@@ -21,7 +21,7 @@ name = "bsv_payment_axum_middleware"
 
 [dependencies]
 bsv-sdk = { version = "0.2", features = ["network"] }
-bsv-auth-axum-middleware = "0.1.1"
+bsv-auth-axum-middleware = "0.1"
 axum = { version = "0.8", features = ["json"] }
 tower = "0.5"
 http = "1"
